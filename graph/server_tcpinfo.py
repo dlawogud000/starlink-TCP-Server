@@ -111,7 +111,7 @@ t0 = times[0]
 times = [t - t0 for t in times]
 
 plt.figure()
-plt.plot(times, cwnds)
+plt.scatter(times, cwnds, s=10)
 plt.xlabel("Time (s)")
 plt.ylabel("cwnd")
 plt.title("Server cwnd over Time")
@@ -120,7 +120,7 @@ plt.savefig(os.path.join(path, "server_cwnd.png"), dpi=150, bbox_inches="tight")
 plt.close()
 
 plt.figure()
-plt.plot(times, rtts)
+plt.scatter(times, rtts, s=10)
 plt.xlabel("Time (s)")
 plt.ylabel("RTT (ms)")
 plt.title("Server TCP RTT over Time")
@@ -129,7 +129,7 @@ plt.savefig(os.path.join(path, "server_tcp_rtt.png"), dpi=150, bbox_inches="tigh
 plt.close()
 
 plt.figure()
-plt.plot(times, unackeds)
+plt.scatter(times, unackeds, s=10)
 plt.xlabel("Time (s)")
 plt.ylabel("unacked")
 plt.title("Server Unacked Packets over Time")
@@ -138,7 +138,7 @@ plt.savefig(os.path.join(path, "server_unacked.png"), dpi=150, bbox_inches="tigh
 plt.close()
 
 plt.figure()
-plt.plot(times, delivery_rates)
+plt.scatter(times, delivery_rates, s=10)
 plt.xlabel("Time (s)")
 plt.ylabel("Delivery Rate (Mbps)")
 plt.title("Server Delivery Rate over Time")
