@@ -1,0 +1,1 @@
+bash: /home/dlawogud/git/starlink-TCP-Server/bin/sync_time_check.sh: No such file or directory

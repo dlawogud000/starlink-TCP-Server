@@ -1,0 +1,35 @@
+===== date =====
+2026-04-06T15:18:19,305251487+09:00
+===== timedatectl =====
+               Local time: 월 2026-04-06 15:18:19 KST
+           Universal time: 월 2026-04-06 06:18:19 UTC
+                 RTC time: 월 2026-04-06 06:18:19
+                Time zone: Asia/Seoul (KST, +0900)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no
+===== chronyc tracking =====
+Reference ID    : D36C75D3 (211.108.117.211)
+Stratum         : 3
+Ref time (UTC)  : Mon Apr 06 06:14:28 2026
+System time     : 0.000056280 seconds slow of NTP time
+Last offset     : -0.000059639 seconds
+RMS offset      : 0.000287958 seconds
+Frequency       : 18.990 ppm fast
+Residual freq   : -0.003 ppm
+Skew            : 0.139 ppm
+Root delay      : 0.002830195 seconds
+Root dispersion : 0.000552823 seconds
+Update interval : 1029.9 seconds
+Leap status     : Normal
+===== chronyc sources =====
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^- prod-ntp-3.ntp1.ps5.cano>     2  10   377   412  +2493us[+2438us] +/-  123ms
+^- prod-ntp-4.ntp1.ps5.cano>     2  10   377   514  +5062us[+5009us] +/-  118ms
+^- prod-ntp-5.ntp1.ps5.cano>     2  10   377   379    +12ms[  +12ms] +/-  125ms
+^- alphyn.canonical.com          2  10   377  111m    -32ms[  -32ms] +/-  142ms
+^* 211.108.117.211               2  10   377   231   -151us[ -211us] +/- 1568us
+^+ 121.134.215.104               2  10   377   709  -1108us[-1157us] +/- 5392us
+^- any.time.nl                   2  10   277   26m    +14ms[  +13ms] +/-   31ms
+^- 121.174.142.82                3  10   377   530   -181us[ -234us] +/-   35ms

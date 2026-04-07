@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/home/dlawogud/git/starlink-TCP-Server/graph/server_tcpinfo.py", line 5, in <module>
+    import matplotlib
+ModuleNotFoundError: No module named 'matplotlib'

@@ -1,0 +1,14 @@
+timestamp=2026-04-07T12:50:31+09:00
+protocol=udp
+direction=uplink
+run_id=auto
+server_ip=165.194.35.203
+server_port=20075
+client_ip=150.228.147.246
+client_port=-
+server_iface=enp0s31f6
+duration=30
+kernel=Linux NSL3 6.8.0-106-generic #106~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Mar  6 08:44:59 UTC  x86_64 x86_64 x86_64 GNU/Linux
+host=NSL3
+tcp_cc_current=cubic
+tcp_available=reno cubic bbr
