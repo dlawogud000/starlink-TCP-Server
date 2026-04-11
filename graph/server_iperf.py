@@ -55,7 +55,7 @@ if not times:
     sys.exit(0)
 
 plt.figure()
-plt.scatter(times, throughputs, s=10)
+plt.plot(times, throughputs)
 plt.xlabel("Time (s)")
 plt.ylabel("Throughput (Mbps)")
 plt.title("Server Throughput over Time")
@@ -65,7 +65,7 @@ plt.close()
 
 if is_udp:
     plt.figure()
-    plt.scatter(times[:len(jitters)], jitters, s=10)
+    plt.plot(times[:len(jitters)], jitters)
     plt.xlabel("Time (s)")
     plt.ylabel("Jitter (ms)")
     plt.title("Server UDP Jitter over Time")
@@ -74,7 +74,7 @@ if is_udp:
     plt.close()
 
     plt.figure()
-    plt.scatter(times[:len(losses)], losses, s=10)
+    plt.plot(times[:len(losses)], losses)
     plt.xlabel("Time (s)")
     plt.ylabel("Loss (%)")
     plt.title("Server UDP Loss over Time")

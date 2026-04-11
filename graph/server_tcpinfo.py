@@ -20,6 +20,7 @@ if not os.path.exists(logfile):
 times = []
 cwnds = []
 rtts = []
+rcv_rtts = []
 bytes_sents = []
 bytes_recvs = []
 unackeds = []
@@ -31,6 +32,7 @@ best_entry = None
 def parse_metrics(line):
     cwnd = None
     rtt = None
+    rcv_rtt = None
     bytes_sent = 0
     bytes_received = 0
     unacked = 0
@@ -43,6 +45,10 @@ def parse_metrics(line):
     m = re.search(r"rtt:([0-9.]+)", line)
     if m:
         rtt = float(m.group(1))
+
+    m = re.search(r"rcv_rtt:([0-9.]+)", line)
+    if m:
+        rcv_rtt = float(m.group(1))
 
     m = re.search(r"bytes_sent:(\d+)", line)
     if m:
@@ -60,13 +66,14 @@ def parse_metrics(line):
     if m:
         delivery_rate = float(m.group(1))
 
-    return cwnd, rtt, bytes_sent, bytes_received, unacked, delivery_rate
+    return cwnd, rtt, rcv_rtt, bytes_sent, bytes_received, unacked, delivery_rate
 
 def flush_best():
     if best_entry is not None:
         times.append(best_entry["time"])
         cwnds.append(best_entry["cwnd"])
         rtts.append(best_entry["rtt"])
+        rcv_rtts.append(best_entry["rcv_rtt"])
         bytes_sents.append(best_entry["bytes_sent"])
         bytes_recvs.append(best_entry["bytes_received"])
         unackeds.append(best_entry["unacked"])
@@ -83,7 +90,7 @@ with open(logfile) as f:
             continue
 
         if "cwnd:" in line and "rtt:" in line:
-            cwnd, rtt, bytes_sent, bytes_received, unacked, delivery_rate = parse_metrics(line)
+            cwnd, rtt, rcv_rtt, bytes_sent, bytes_received, unacked, delivery_rate = parse_metrics(line)
             if cwnd is None or rtt is None or current_time is None:
                 continue
 
@@ -94,6 +101,7 @@ with open(logfile) as f:
                     "time": current_time,
                     "cwnd": cwnd,
                     "rtt": rtt,
+                    "rcv_rtt": rcv_rtt,
                     "bytes_sent": bytes_sent,
                     "bytes_received": bytes_received,
                     "unacked": unacked,
@@ -111,7 +119,7 @@ t0 = times[0]
 times = [t - t0 for t in times]
 
 plt.figure()
-plt.scatter(times, cwnds, s=10)
+plt.plot(times, cwnds)
 plt.xlabel("Time (s)")
 plt.ylabel("cwnd")
 plt.title("Server cwnd over Time")
@@ -126,6 +134,15 @@ plt.ylabel("RTT (ms)")
 plt.title("Server TCP RTT over Time")
 plt.grid()
 plt.savefig(os.path.join(path, "server_tcp_rtt.png"), dpi=150, bbox_inches="tight")
+plt.close()
+
+plt.figure()
+plt.plot(times, rcv_rtts)
+plt.xlabel("Time (s)")
+plt.ylabel("RCV RTT (ms)")
+plt.title("Server TCP RCV RTT over Time")
+plt.grid()
+plt.savefig(os.path.join(path, "server_tcp_rcv_rtt.png"), dpi=150, bbox_inches="tight")
 plt.close()
 
 plt.figure()
