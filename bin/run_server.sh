@@ -204,5 +204,5 @@ while true; do
     reset_state
   fi
 
-  sleep 1
+  sleep 0.5
 done
