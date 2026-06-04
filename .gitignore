@@ -58,3 +58,10 @@ dkms.conf
 logs/**/*.pcap
 logs/**/**/*.pcap
 bin/tmp/*.pid
+
+logs/*
+tmp/*
+bin/tmp/*
+bin/app_layer_rtt/bbr
+bin/app_layer_rtt/cubic
+bin/app_layer_rtt/udp

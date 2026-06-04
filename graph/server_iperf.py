@@ -5,6 +5,7 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 
 if len(sys.argv) < 2:
     print(f"Usage: {sys.argv[0]} <out_dir>", file=sys.stderr)
@@ -54,8 +55,15 @@ if not times:
     print("[WARN] No iperf interval data found", file=sys.stderr)
     sys.exit(0)
 
-plt.figure()
+plt.figure(figsize=(12, 4))
 plt.plot(times, throughputs)
+ax = plt.gca()
+ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+if max(throughputs) < 250:
+    ax.set_ylim(bottom=0, top=max(150, max(throughputs) * 1.15))
+else:
+    ax.set_ylim(bottom=0, top=max(350, max(throughputs) * 1.15))
 plt.xlabel("Time (s)")
 plt.ylabel("Throughput (Mbps)")
 plt.title("Server Throughput over Time")

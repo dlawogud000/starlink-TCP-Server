@@ -17,6 +17,7 @@ CURRENT_OUTFILE="$TMP_ROOT/server_current_outdir"
 reset_state() {
   rm -f "$CURRENT_OUTFILE"
   rm -f "$TMP_ROOT/server_iperf_tmp.json" "$TMP_ROOT/server_iperf_tmp.stderr.log"
+  rm -f "$TMP_ROOT/server_tcpdump_tmp.pcap" "$TMP_ROOT/server_tcpdump_tmp.log"
   rm -f "$TMP_ROOT/server_tcpdump.pid" \
         "$TMP_ROOT/server_ss.pid" \
         "$TMP_ROOT/server_ss_parse.pid" \
@@ -25,6 +26,57 @@ reset_state() {
 
 stop_all_monitors() {
   bash "$BASE_DIR/bin/server_stop_monitors.sh" || true
+}
+
+stop_tcpdump_only() {
+  if [ -f "$TMP_ROOT/server_tcpdump.pid" ]; then
+    local pid
+    pid="$(cat "$TMP_ROOT/server_tcpdump.pid" 2>/dev/null || true)"
+    if [ -n "$pid" ]; then
+      kill -INT "$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+    fi
+    rm -f "$TMP_ROOT/server_tcpdump.pid"
+  fi
+}
+
+start_early_tcpdump() {
+  # Keep the existing variable name SERVER_PORTS because this project config uses it.
+  # In the current single-port server mode, SERVER_PORTS should contain one port.
+  local filter="port $SERVER_PORT"
+
+  echo "[INFO] Starting early tcpdump: $filter"
+  sudo setsid tcpdump -i "$SERVER_IFACE" -s "$TCPDUMP_SNAPLEN" \
+    -w "$TMP_ROOT/server_tcpdump_tmp.pcap" \
+    "$filter" \
+    > "$TMP_ROOT/server_tcpdump_tmp.log" 2>&1 &
+  echo $! > "$TMP_ROOT/server_tcpdump.pid"
+
+  sleep "${TCPDUMP_WARMUP_SEC:-1}"
+}
+
+move_early_tcpdump_to_outdir() {
+  local out_dir="$1"
+
+  if [ -f "$TMP_ROOT/server_tcpdump_tmp.pcap" ]; then
+    mv -f "$TMP_ROOT/server_tcpdump_tmp.pcap" "$out_dir/server_tcpdump.pcap"
+  fi
+
+  if [ -f "$TMP_ROOT/server_tcpdump_tmp.log" ]; then
+    mv -f "$TMP_ROOT/server_tcpdump_tmp.log" "$out_dir/tcpdump_stdout.log"
+  fi
+}
+
+move_iperf_to_outdir() {
+  local out_dir="$1"
+
+  if [ -f "$TMP_ROOT/server_iperf_tmp.json" ]; then
+    mv -f "$TMP_ROOT/server_iperf_tmp.json" "$out_dir/server_iperf.json"
+  fi
+
+  if [ -f "$TMP_ROOT/server_iperf_tmp.stderr.log" ]; then
+    mv -f "$TMP_ROOT/server_iperf_tmp.stderr.log" "$out_dir/server_iperf.stderr.log"
+  fi
 }
 
 wait_for_outdir() {
@@ -41,7 +93,7 @@ wait_for_outdir() {
       fi
     fi
     [ "$STOP_REQUESTED" -eq 1 ] && return 1
-    sleep 0.2
+    sleep 0.5
     waited=$((waited + 1))
   done
 
@@ -66,7 +118,9 @@ PY
 
 read_meta_client_ip() {
   local meta_file="$1"
-  sed -n 's/^client_ip=//p' "$meta_file" | head -n1
+  if [ -f "$meta_file" ]; then
+    sed -n 's/^client_ip=//p' "$meta_file" | head -n1
+  fi
 }
 
 rename_outdir_with_result() {
@@ -78,13 +132,12 @@ rename_outdir_with_result() {
   base_parent="$(dirname "$out_dir")"
 
   local base_name
-  base_name="$(basename "$out_dir")"   # ex: 20260407_120000_pending_auto
+  base_name="$(basename "$out_dir")"
   local ts
   ts="${base_name%%_pending_*}"
 
   local new_dir="${base_parent}/${ts}_${protocol}_${direction}_auto"
 
-  # 이미 존재하면 suffix 추가
   local idx=1
   local final_dir="$new_dir"
   while [ -e "$final_dir" ] && [ "$final_dir" != "$out_dir" ]; do
@@ -114,6 +167,14 @@ plot_server_graphs() {
     python3 "$BASE_DIR/graph/server_tcpinfo.py" "$OUT_DIR" \
       > "$OUT_DIR/plot_server_tcpinfo.stdout.log" 2>&1 || true
   fi
+
+  if [ "$PROTOCOL" = "tcp" ]; then
+    python3 "$BASE_DIR/graph/retransmission.py" "$OUT_DIR/ss_tcpinfo.log" \
+      > "$OUT_DIR/plot_retransmission.stdout.log" 2>&1 || true
+  fi
+
+  python3 "$BASE_DIR/graph/iperf_jsh.py" "$OUT_DIR" \
+    > "$OUT_DIR/plot_iperf.stdout.log" 2>&1 || true
 }
 
 shutdown_handler() {
@@ -138,13 +199,18 @@ shutdown_handler() {
 }
 
 cleanup_on_exit() {
-  stop_all_monitors || true
-  reset_state || true
+  if [ -n "${IPERF_PID:-}" ]; then
+    kill -INT "$IPERF_PID" 2>/dev/null || true
+    wait "$IPERF_PID" 2>/dev/null || true
+  fi
 
   if [ -n "${WATCHER_PID:-}" ]; then
     kill "$WATCHER_PID" 2>/dev/null || true
     wait "$WATCHER_PID" 2>/dev/null || true
   fi
+
+  stop_all_monitors || true
+  reset_state || true
 }
 
 trap shutdown_handler INT TERM
@@ -159,12 +225,14 @@ WATCHER_PID=$!
 
 echo "[INFO] Starting iperf3 one-shot server loop on port $SERVER_PORT"
 
-while true; do
-  [ "$STOP_REQUESTED" -eq 1 ] && break
-
+while [ "$STOP_REQUESTED" -eq 0 ]; do
   reset_state
+  IPERF_PID=""
 
-  iperf3 -s -p "$SERVER_PORT" -4 -1 --json \
+  start_early_tcpdump
+
+  echo "[INFO] Starting iperf3 server on port $SERVER_PORT"
+  iperf3 -s -p "$SERVER_PORT" -4 -1 -i "$IPERF_INTERVAL" --json \
     > "$TMP_ROOT/server_iperf_tmp.json" \
     2> "$TMP_ROOT/server_iperf_tmp.stderr.log" &
   IPERF_PID=$!
@@ -172,37 +240,46 @@ while true; do
   wait "$IPERF_PID" || true
   IPERF_PID=""
 
-  [ "$STOP_REQUESTED" -eq 1 ] && break
+  [ "$STOP_REQUESTED" -eq 1 ] && exit 0
 
   OUT_DIR=""
   if OUT_DIR="$(wait_for_outdir 30)"; then
-    mv "$TMP_ROOT/server_iperf_tmp.json" "$OUT_DIR/server_iperf.json" 2>/dev/null || true
-    mv "$TMP_ROOT/server_iperf_tmp.stderr.log" "$OUT_DIR/server_iperf.stderr.log" 2>/dev/null || true
+    # Stop tcpdump explicitly first to flush the pcap.
+    # Do not call reset_state before moving tmp outputs.
+    stop_tcpdump_only
 
-    # iperf JSON 기준으로 protocol/direction 확정
-    mapfile -t INFO < <(read_iperf_info "$OUT_DIR/server_iperf.json")
-    PROTOCOL="${INFO[0]:-unknown}"
-    DIRECTION="${INFO[1]:-unknown}"
+    move_early_tcpdump_to_outdir "$OUT_DIR"
+    move_iperf_to_outdir "$OUT_DIR"
+
+    if [ -s "$OUT_DIR/server_iperf.json" ]; then
+      mapfile -t INFO < <(read_iperf_info "$OUT_DIR/server_iperf.json")
+      PROTOCOL="${INFO[0]:-unknown}"
+      DIRECTION="${INFO[1]:-unknown}"
+    else
+      PROTOCOL="unknown"
+      DIRECTION="unknown"
+    fi
 
     CLIENT_IP="$(read_meta_client_ip "$OUT_DIR/meta.txt" || true)"
     CLIENT_IP="${CLIENT_IP:-unknown}"
 
     FINAL_OUT_DIR="$(rename_outdir_with_result "$OUT_DIR" "$PROTOCOL" "$DIRECTION")"
 
-    # meta 다시 정확하게 기록
     bash "$BASE_DIR/bin/server_collect_meta.sh" \
       "$PROTOCOL" "$DIRECTION" "auto" "$FINAL_OUT_DIR" "$CLIENT_IP" "-"
 
     echo "[INFO] Saved iperf server result to $FINAL_OUT_DIR/server_iperf.json"
 
+    # Stop ss/iface monitors after rename; their file descriptors keep writing
+    # to the same files even after directory rename.
     stop_all_monitors
+
     plot_server_graphs "$FINAL_OUT_DIR" "$PROTOCOL"
+
     reset_state
   else
     echo "[WARN] Missing OUT_DIR for this run. Cleaning state without orphan folder."
-    stop_all_monitors
+    stop_all_monitors || true
     reset_state
   fi
-
-  sleep 0.5
 done

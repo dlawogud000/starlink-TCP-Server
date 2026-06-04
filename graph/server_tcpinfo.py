@@ -5,6 +5,7 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 
 if len(sys.argv) < 2:
     print(f"Usage: {sys.argv[0]} <out_dir>", file=sys.stderr)
@@ -118,8 +119,11 @@ if not times:
 t0 = times[0]
 times = [t - t0 for t in times]
 
-plt.figure()
+plt.figure(figsize=(12, 4))
 plt.plot(times, cwnds)
+ax = plt.gca()
+ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
 plt.xlabel("Time (s)")
 plt.ylabel("cwnd")
 plt.title("Server cwnd over Time")
@@ -127,8 +131,12 @@ plt.grid()
 plt.savefig(os.path.join(path, "server_cwnd.png"), dpi=150, bbox_inches="tight")
 plt.close()
 
-plt.figure()
-plt.scatter(times, rtts, s=10)
+plt.figure(figsize=(12, 4))
+plt.plot(times, rtts)
+ax = plt.gca()
+ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+ax.set_ylim(bottom=0, top=200)
 plt.xlabel("Time (s)")
 plt.ylabel("RTT (ms)")
 plt.title("Server TCP RTT over Time")

@@ -1942,3 +1942,11 @@
 1775893692.633423341 rtt_ms=49.211 rttvar_ms=45.09 cwnd=14 bytes_sent=4 bytes_received=161 unacked=0 delivery_rate_bps=46522088 retrans= conn="ESTAB 0      0      165.194.35.203:20075 150.228.147.4:12000"
 1775893692.659753708 rtt_ms=49.211 rttvar_ms=45.09 cwnd=14 bytes_sent=4 bytes_received=161 unacked=0 delivery_rate_bps=46522088 retrans= conn="ESTAB 0      0      165.194.35.203:20075 150.228.147.4:12000"
 1775893692.687362371 rtt_ms=49.211 rttvar_ms=45.09 cwnd=14 bytes_sent=4 bytes_received=161 unacked=0 delivery_rate_bps=46522088 retrans= conn="ESTAB 0      0      165.194.35.203:20075 150.228.147.4:12000"
+1775893692.714921888 rtt_ms=43.097 rttvar_ms=45.209 cwnd=15 bytes_sent=5 bytes_received=162 unacked=0 delivery_rate_bps=46522088 retrans= conn="ESTAB 0      0      165.194.35.203:20075 150.228.147.4:12000"
+1775893692.743897153 rtt_ms=43.097 rttvar_ms=45.209 cwnd=15 bytes_sent=5 bytes_received=162 unacked=0 delivery_rate_bps=46522088 retrans= conn="ESTAB 0      0      165.194.35.203:20075 150.228.147.4:12000"
+1775893692.772985190 rtt_ms=43.097 rttvar_ms=45.209 cwnd=15 bytes_sent=5 bytes_received=166 unacked=0 delivery_rate_bps=46522088 retrans= conn="ESTAB 0      0      165.194.35.203:20075 150.228.147.4:12000"
+1775893692.803271312 rtt_ms=43.097 rttvar_ms=45.209 cwnd=15 bytes_sent=5 bytes_received=166 unacked=0 delivery_rate_bps=46522088 retrans= conn="ESTAB 0      0      165.194.35.203:20075 150.228.147.4:12000"
+1775893692.835488887 rtt_ms=33.048 rttvar_ms=42.846 cwnd=4 bytes_sent=304 bytes_received=430 unacked=0 delivery_rate_bps=49504272 retrans= conn="ESTAB 0      0      165.194.35.203:20075 150.228.147.4:12000"
+1775893692.868243423 rtt_ms=33.048 rttvar_ms=42.846 cwnd=4 bytes_sent=304 bytes_received=430 unacked=0 delivery_rate_bps=49504272 retrans= conn="ESTAB 0      0      165.194.35.203:20075 150.228.147.4:12000"
+1775893692.900975372 no_data_connection
+1775893692.928678674 no_data_connection

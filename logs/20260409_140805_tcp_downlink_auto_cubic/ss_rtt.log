@@ -10442,3 +10442,8 @@
 1775711585.955179123 rtt_ms=40.973 rttvar_ms=42.885 cwnd=10 bytes_sent=5 bytes_received=158 unacked=0 delivery_rate_bps=44045624 retrans= conn="ESTAB      0      0       165.194.35.203:20075 150.228.147.34:18807"
 1775711585.985588819 rtt_ms=40.973 rttvar_ms=42.885 cwnd=10 bytes_sent=5 bytes_received=162 unacked=0 delivery_rate_bps=44045624 retrans= conn="ESTAB      0      0       165.194.35.203:20075 150.228.147.34:18807"
 1775711586.015712534 rtt_ms=40.973 rttvar_ms=42.885 cwnd=10 bytes_sent=5 bytes_received=162 unacked=0 delivery_rate_bps=44045624 retrans= conn="ESTAB      0      0       165.194.35.203:20075 150.228.147.34:18807"
+1775711586.047277567 rtt_ms=40.973 rttvar_ms=42.885 cwnd=10 bytes_sent=5 bytes_received=162 unacked=0 delivery_rate_bps=44045624 retrans= conn="ESTAB      0      0       165.194.35.203:20075 150.228.147.34:18807"
+1775711586.080962841 rtt_ms=31.432 rttvar_ms=40.657 cwnd=10 bytes_sent=305 bytes_received=452 unacked=0 delivery_rate_bps=37980320 retrans= conn="ESTAB      0      0       165.194.35.203:20075 150.228.147.34:18807"
+1775711586.115686224 rtt_ms=31.432 rttvar_ms=40.657 cwnd=10 bytes_sent=305 bytes_received=452 unacked=0 delivery_rate_bps=37980320 retrans= conn="ESTAB      0      0      165.194.35.203:20075 150.228.147.34:18807"
+1775711586.149453793 no_data_connection
+1775711586.175553875 no_data_connection

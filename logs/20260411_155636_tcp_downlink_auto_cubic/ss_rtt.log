@@ -10506,3 +10506,6 @@
 1775890897.156547878 rtt_ms=34.881 rttvar_ms=36.46 cwnd=10 bytes_sent=5 bytes_received=162 unacked=0 delivery_rate_bps=54641504 retrans= conn="ESTAB      0      0      165.194.35.203:20075 150.228.147.4:45345"
 1775890897.186812111 rtt_ms=26.769 rttvar_ms=34.567 cwnd=10 bytes_sent=304 bytes_received=454 unacked=0 delivery_rate_bps=38613328 retrans= conn="ESTAB      0      0      165.194.35.203:20075 150.228.147.4:45345"
 1775890897.216984072 rtt_ms=26.769 rttvar_ms=34.567 cwnd=10 bytes_sent=304 bytes_received=454 unacked=0 delivery_rate_bps=38613328 retrans= conn="ESTAB      0      0      165.194.35.203:20075 150.228.147.4:45345"
+1775890897.247264586 rtt_ms=26.769 rttvar_ms=34.567 cwnd=10 bytes_sent=304 bytes_received=454 unacked=0 delivery_rate_bps=38613328 retrans= conn="ESTAB      0      0      165.194.35.203:20075 150.228.147.4:45345"
+1775890897.277436509 no_data_connection
+1775890897.307057130 no_data_connection
