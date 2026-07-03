@@ -11,25 +11,52 @@ mkdir -p "${BASE_DIR}/${LOG_ROOT}"
 
 CURRENT_OUTFILE="$TMP_ROOT/server_current_outdir"
 
+normalize_ports() {
+  local s="${1:-}"
+  s="${s//,/ }"
+  for p in $s; do
+    [[ -n "$p" ]] && echo "$p"
+  done
+}
+
+build_ss_filter() {
+  local filter=""
+  local p
+  for p in $(normalize_ports "${SERVER_PORTS:-$SERVER_PORT}"); do
+    if [ -z "$filter" ]; then
+      filter="sport = :$p"
+    else
+      filter="$filter or sport = :$p"
+    fi
+  done
+  echo "$filter"
+}
+
+strip_peer_ip() {
+  local peer="$1"
+  if [[ "$peer" =~ ^\[.*\]:[0-9]+$ ]]; then
+    peer="${peer#\[}"
+    peer="${peer%\]:*}"
+  else
+    peer="${peer%:*}"
+  fi
+  echo "$peer"
+}
+
 detect_active_client_ip() {
-  ss -Htn "sport = :$SERVER_PORT" 2>/dev/null | \
+  local filter
+  filter="$(build_ss_filter)"
+  ss -Htn "$filter" 2>/dev/null | \
   awk '$1 == "ESTAB" {print $5}' | \
   while read -r peer; do
-    if [[ "$peer" =~ ^\[.*\]:[0-9]+$ ]]; then
-      peer="${peer#\[}"
-      peer="${peer%\]:*}"
-    else
-      peer="${peer%:*}"
-    fi
-    echo "$peer"
+    strip_peer_ip "$peer"
     break
   done
 }
 
-echo "[INFO] server_watch_iperf started: port=$SERVER_PORT iface=$SERVER_IFACE"
+echo "[INFO] server_watch_iperf started: ports=${SERVER_PORTS:-$SERVER_PORT} iface=$SERVER_IFACE"
 
 while true; do
-  # 이미 활성 run이 있으면 run_server가 current_outdir를 지울 때까지 대기
   if [ -f "$CURRENT_OUTFILE" ]; then
     sleep 0.2
     continue
@@ -45,9 +72,8 @@ while true; do
     mkdir -p "$OUT_DIR"
     echo "$OUT_DIR" > "$CURRENT_OUTFILE"
 
-    echo "[INFO] detected iperf control flow from $PEER_IP -> start monitor: $EXP_ID"
+    echo "[INFO] detected iperf flow from $PEER_IP -> start monitor: $EXP_ID"
 
-    # protocol/direction은 아직 미정
     bash "$BASE_DIR/bin/server_collect_meta.sh" \
       "unknown" "unknown" "$RUN_ID" "$OUT_DIR" "$PEER_IP" "-"
 

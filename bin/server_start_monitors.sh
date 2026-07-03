@@ -11,36 +11,79 @@ source "$BASE_DIR/config/experiment.conf"
 mkdir -p "$OUT_DIR"
 mkdir -p "$TMP_ROOT"
 
-# tcpdump is started early by run_server.sh before iperf3 accepts SYN.
-# If it is already running, do not start a second tcpdump and do not overwrite
-# the early tcpdump pid. This preserves the SYN-containing pcap in TMP_ROOT
-# until run_server.sh moves it into OUT_DIR.
+normalize_ports() {
+  local s="${1:-}"
+  s="${s//,/ }"
+  for p in $s; do
+    [[ -n "$p" ]] && echo "$p"
+  done
+}
+
+build_port_filter() {
+  local filter=""
+  local p
+  for p in $(normalize_ports "${SERVER_PORTS:-$SERVER_PORT}"); do
+    if [ -z "$filter" ]; then
+      filter="port $p"
+    else
+      filter="$filter or port $p"
+    fi
+  done
+
+  if [ -n "${APP_RTT_PORT:-}" ]; then
+    filter="$filter or port $APP_RTT_PORT"
+  fi
+
+  if [ -n "${CLIENT_IP:-}" ] && [ "$CLIENT_IP" != "-" ] && [ "$CLIENT_IP" != "unknown" ]; then
+    echo "host $CLIENT_IP and ( $filter )"
+  else
+    echo "$filter"
+  fi
+}
+
+build_ss_filter() {
+  local filter=""
+  local p
+  for p in $(normalize_ports "${SERVER_PORTS:-$SERVER_PORT}"); do
+    if [ -z "$filter" ]; then
+      filter="sport = :$p"
+    else
+      filter="$filter or sport = :$p"
+    fi
+  done
+  if [ -n "${APP_RTT_PORT:-}" ]; then
+    filter="$filter or sport = :$APP_RTT_PORT"
+  fi
+  echo "$filter"
+}
+
 if [ -f "$TMP_ROOT/server_tcpdump.pid" ] && kill -0 "$(cat "$TMP_ROOT/server_tcpdump.pid" 2>/dev/null)" 2>/dev/null; then
   echo "[INFO] tcpdump already started early by run_server.sh" > "$OUT_DIR/tcpdump_start_info.log"
 else
+  TCPDUMP_FILTER="$(build_port_filter)"
   sudo setsid tcpdump -i "$SERVER_IFACE" -s "$TCPDUMP_SNAPLEN" \
     -w "$OUT_DIR/server_tcpdump.pcap" \
-    "port $SERVER_PORT" \
+    "$TCPDUMP_FILTER" \
     > "$OUT_DIR/tcpdump_stdout.log" 2>&1 &
   echo $! > "$TMP_ROOT/server_tcpdump.pid"
 fi
 
-# ss / tcp_info
+SS_FILTER="$(build_ss_filter)"
+
 setsid bash -c "
 while true; do
   date +%s.%N
-  ss -tin sport = :$SERVER_PORT || true
+  ss -tin '$SS_FILTER' || true
   sleep $SS_INTERVAL
 done
 " > "$OUT_DIR/ss_tcpinfo.log" 2>&1 &
 echo $! > "$TMP_ROOT/server_ss.pid"
 
-# ss parser
+
 setsid bash "$BASE_DIR/bin/server_parse_ss.sh" "$OUT_DIR" \
   > "$OUT_DIR/ss_parse_stdout.log" 2>&1 &
 echo $! > "$TMP_ROOT/server_ss_parse.pid"
 
-# interface stats
 setsid bash -c "
 while true; do
   date +%s.%N

@@ -376,20 +376,6 @@ int main(int argc, char *argv[]) {
     free(table);
 
     printf("Done. Result saved to %s\n", out_path);
-    printf("Done. Result saved to %s\n", out_path);
 
-    char cmd[1024];
-
-    snprintf(cmd, sizeof(cmd),
-            "python3 rtt.py %s",
-            out_path);
-
-    printf("Running plot script: %s\n", cmd);
-
-    int ret = system(cmd);
-
-    if (ret != 0) {
-        fprintf(stderr, "plot script failed\n");
-    }
     return 0;
 }

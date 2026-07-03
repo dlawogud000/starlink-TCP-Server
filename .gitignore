@@ -65,3 +65,4 @@ bin/tmp/*
 bin/app_layer_rtt/bbr
 bin/app_layer_rtt/cubic
 bin/app_layer_rtt/udp
+Downloads/*
