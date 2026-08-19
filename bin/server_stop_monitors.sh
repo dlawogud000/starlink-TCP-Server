@@ -35,3 +35,11 @@ sudo pkill -f "ss -tin" 2>/dev/null || true
 if [ -n "${APP_RTT_PORT:-}" ]; then
   pkill -f "tcp_ping_sender.*${APP_RTT_PORT}" 2>/dev/null || true
 fi
+
+if [[ -f "$TMP_ROOT/kernel_leo.pid" ]]; then
+    PID=$(cat "$TMP_ROOT/kernel_leo.pid")
+
+    sudo kill -TERM -- "-$PID" 2>/dev/null || true
+
+    rm -f "$TMP_ROOT/kernel_leo.pid"
+fi
