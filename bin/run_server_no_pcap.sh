@@ -50,17 +50,17 @@ stop_all_monitors() {
   bash "$BASE_DIR/bin/server_stop_monitors.sh" || true
 }
 
-stop_tcpdump_only() {
-  if [ -f "$TMP_ROOT/server_tcpdump.pid" ]; then
-    local pid
-    pid="$(cat "$TMP_ROOT/server_tcpdump.pid" 2>/dev/null || true)"
-    if [ -n "$pid" ]; then
-      kill -INT "$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true
-      wait "$pid" 2>/dev/null || true
-    fi
-    rm -f "$TMP_ROOT/server_tcpdump.pid"
-  fi
-}
+# stop_tcpdump_only() {
+#   if [ -f "$TMP_ROOT/server_tcpdump.pid" ]; then
+#     local pid
+#     pid="$(cat "$TMP_ROOT/server_tcpdump.pid" 2>/dev/null || true)"
+#     if [ -n "$pid" ]; then
+#       kill -INT "$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true
+#       wait "$pid" 2>/dev/null || true
+#     fi
+#     rm -f "$TMP_ROOT/server_tcpdump.pid"
+#   fi
+# }
 
 stop_iperf_servers() {
   if [ -f "$IPERF_PIDS_FILE" ]; then
@@ -76,61 +76,61 @@ stop_iperf_servers() {
   fi
 }
 
-build_tcpdump_filter() {
-  local filter=""
-  local p
-  for p in "${IPERF_PORTS[@]}"; do
-    if [ -z "$filter" ]; then
-      filter="port $p"
-    else
-      filter="$filter or port $p"
-    fi
-  done
+# build_tcpdump_filter() {
+#   local filter=""
+#   local p
+#   for p in "${IPERF_PORTS[@]}"; do
+#     if [ -z "$filter" ]; then
+#       filter="port $p"
+#     else
+#       filter="$filter or port $p"
+#     fi
+#   done
 
-  # if [ -n "$APP_RTT_PORT" ]; then
-  #   filter="$filter or port $APP_RTT_PORT"
-  # fi
+#   if [ -n "$APP_RTT_PORT" ]; then
+#     filter="$filter or port $APP_RTT_PORT"
+#   fi
 
-  echo "$filter"
-}
+#   echo "$filter"
+# }
 
-start_early_tcpdump() {
-  local filter
-  filter="$(build_tcpdump_filter)"
+# start_early_tcpdump() {
+#   local filter
+#   filter="$(build_tcpdump_filter)"
 
-  echo "[INFO] Starting early tcpdump: $filter"
-  sudo setsid tcpdump -i "$SERVER_IFACE" -s "$TCPDUMP_SNAPLEN" \
-    -w "$TMP_ROOT/server_tcpdump_tmp.pcap" \
-    "$filter" \
-    > "$TMP_ROOT/server_tcpdump_tmp.log" 2>&1 &
-  echo $! > "$TMP_ROOT/server_tcpdump.pid"
+#   echo "[INFO] Starting early tcpdump: $filter"
+#   sudo setsid tcpdump -i "$SERVER_IFACE" -s "$TCPDUMP_SNAPLEN" \
+#     -w "$TMP_ROOT/server_tcpdump_tmp.pcap" \
+#     "$filter" \
+#     > "$TMP_ROOT/server_tcpdump_tmp.log" 2>&1 &
+#   echo $! > "$TMP_ROOT/server_tcpdump.pid"
 
-  sleep "${TCPDUMP_WARMUP_SEC:-1}"
-}
+#   sleep "${TCPDUMP_WARMUP_SEC:-1}"
+# }
 
-start_rtt_sender() {
-  if [ -z "$APP_RTT_PORT" ]; then
-    return 0
-  fi
+# start_rtt_sender() {
+#   if [ -z "$APP_RTT_PORT" ]; then
+#     return 0
+#   fi
 
-  local rtt_bin="$BASE_DIR/bin/app_layer_rtt/udp_ping_sender"
-  if [ ! -x "$rtt_bin" ]; then
-    echo "[WARN] app-level RTT binary not executable or not found: $rtt_bin"
-    return 0
-  fi
+#   local rtt_bin="$BASE_DIR/bin/app_layer_rtt/tcp_ping_sender"
+#   if [ ! -x "$rtt_bin" ]; then
+#     echo "[WARN] app-level RTT binary not executable or not found: $rtt_bin"
+#     return 0
+#   fi
 
-  echo "[INFO] Starting app-level RTT sender on port $APP_RTT_PORT"
-  setsid "$rtt_bin" "$APP_RTT_PORT" "$APP_RTT_INTERVAL_MS" "$DURATION" "$TMP_ROOT/server_rtt_tmp.csv" \
-    > "$TMP_ROOT/server_rtt_tmp.stdout.log" 2>&1 &
-  echo $! > "$TMP_ROOT/server_rtt.pid"
-}
+#   echo "[INFO] Starting app-level RTT sender on port $APP_RTT_PORT"
+#   setsid "$rtt_bin" "$APP_RTT_PORT" "$APP_RTT_INTERVAL_MS" "$DURATION" "$TMP_ROOT/server_rtt_tmp.csv" \
+#     > "$TMP_ROOT/server_rtt_tmp.stdout.log" 2>&1 &
+#   echo $! > "$TMP_ROOT/server_rtt.pid"
+# }
 
-move_early_tcpdump_to_outdir() {
-  local out_dir="$1"
+# move_early_tcpdump_to_outdir() {
+#   local out_dir="$1"
 
-  [ -f "$TMP_ROOT/server_tcpdump_tmp.pcap" ] && mv -f "$TMP_ROOT/server_tcpdump_tmp.pcap" "$out_dir/server_tcpdump.pcap"
-  [ -f "$TMP_ROOT/server_tcpdump_tmp.log" ] && mv -f "$TMP_ROOT/server_tcpdump_tmp.log" "$out_dir/tcpdump_stdout.log"
-}
+#   [ -f "$TMP_ROOT/server_tcpdump_tmp.pcap" ] && mv -f "$TMP_ROOT/server_tcpdump_tmp.pcap" "$out_dir/server_tcpdump.pcap"
+#   [ -f "$TMP_ROOT/server_tcpdump_tmp.log" ] && mv -f "$TMP_ROOT/server_tcpdump_tmp.log" "$out_dir/tcpdump_stdout.log"
+# }
 
 move_iperf_to_outdir() {
   local out_dir="$1"
@@ -368,7 +368,7 @@ WATCHER_PID=$!
 while [ "$STOP_REQUESTED" -eq 0 ]; do
   reset_state
 
-  start_early_tcpdump
+  # start_early_tcpdump
   # start_rtt_sender
 
   : > "$IPERF_PIDS_FILE"
@@ -389,7 +389,7 @@ while [ "$STOP_REQUESTED" -eq 0 ]; do
 
   OUT_DIR=""
   if OUT_DIR="$(wait_for_outdir 30)"; then
-    stop_tcpdump_only
+    # stop_tcpdump_only
 
     if [ -f "$TMP_ROOT/server_rtt.pid" ]; then
       rpid="$(cat "$TMP_ROOT/server_rtt.pid" 2>/dev/null || true)"
@@ -398,7 +398,7 @@ while [ "$STOP_REQUESTED" -eq 0 ]; do
       rm -f "$TMP_ROOT/server_rtt.pid"
     fi
 
-    move_early_tcpdump_to_outdir "$OUT_DIR"
+    # move_early_tcpdump_to_outdir "$OUT_DIR"
     move_iperf_to_outdir "$OUT_DIR"
     # move_rtt_to_outdir "$OUT_DIR"
 

@@ -57,16 +57,16 @@ build_ss_filter() {
   echo "$filter"
 }
 
-if [ -f "$TMP_ROOT/server_tcpdump.pid" ] && kill -0 "$(cat "$TMP_ROOT/server_tcpdump.pid" 2>/dev/null)" 2>/dev/null; then
-  echo "[INFO] tcpdump already started early by run_server.sh" > "$OUT_DIR/tcpdump_start_info.log"
-else
-  TCPDUMP_FILTER="$(build_port_filter)"
-  sudo setsid tcpdump -i "$SERVER_IFACE" -s "$TCPDUMP_SNAPLEN" \
-    -w "$OUT_DIR/server_tcpdump.pcap" \
-    "$TCPDUMP_FILTER" \
-    > "$OUT_DIR/tcpdump_stdout.log" 2>&1 &
-  echo $! > "$TMP_ROOT/server_tcpdump.pid"
-fi
+# if [ -f "$TMP_ROOT/server_tcpdump.pid" ] && kill -0 "$(cat "$TMP_ROOT/server_tcpdump.pid" 2>/dev/null)" 2>/dev/null; then
+#   echo "[INFO] tcpdump already started early by run_server.sh" > "$OUT_DIR/tcpdump_start_info.log"
+# else
+#   TCPDUMP_FILTER="$(build_port_filter)"
+#   sudo setsid tcpdump -i "$SERVER_IFACE" -s "$TCPDUMP_SNAPLEN" \
+#     -w "$OUT_DIR/server_tcpdump.pcap" \
+#     "$TCPDUMP_FILTER" \
+#     > "$OUT_DIR/tcpdump_stdout.log" 2>&1 &
+#   echo $! > "$TMP_ROOT/server_tcpdump.pid"
+# fi
 
 SS_FILTER="$(build_ss_filter)"
 

@@ -32,7 +32,7 @@ plt.plot(df["time_s"], df["plot_rtt_ms"], linewidth=0.8)
 ax = plt.gca()
 ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
 ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-ax.set_ylim(bottom=50, top=max(350, df["plot_rtt_ms"].max()))
+ax.set_ylim(bottom=0, top=max(350, df["plot_rtt_ms"].max()))
 
 plt.xlabel("Time (s)")
 plt.ylabel("RTT (ms)")

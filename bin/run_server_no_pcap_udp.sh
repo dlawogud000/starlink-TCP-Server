@@ -31,8 +31,8 @@ if [ "${#IPERF_PORTS[@]}" -eq 0 ]; then
   IPERF_PORTS=("$SERVER_PORT")
 fi
 
-# APP_RTT_PORT="${APP_RTT_PORT:-}"
-# APP_RTT_INTERVAL_MS="${APP_RTT_INTERVAL_MS:-10}"
+APP_RTT_PORT="${APP_RTT_PORT:-}"
+APP_RTT_INTERVAL_MS="${APP_RTT_INTERVAL_MS:-10}"
 
 reset_state() {
   rm -f "$CURRENT_OUTFILE"
@@ -50,17 +50,17 @@ stop_all_monitors() {
   bash "$BASE_DIR/bin/server_stop_monitors.sh" || true
 }
 
-stop_tcpdump_only() {
-  if [ -f "$TMP_ROOT/server_tcpdump.pid" ]; then
-    local pid
-    pid="$(cat "$TMP_ROOT/server_tcpdump.pid" 2>/dev/null || true)"
-    if [ -n "$pid" ]; then
-      kill -INT "$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true
-      wait "$pid" 2>/dev/null || true
-    fi
-    rm -f "$TMP_ROOT/server_tcpdump.pid"
-  fi
-}
+# stop_tcpdump_only() {
+#   if [ -f "$TMP_ROOT/server_tcpdump.pid" ]; then
+#     local pid
+#     pid="$(cat "$TMP_ROOT/server_tcpdump.pid" 2>/dev/null || true)"
+#     if [ -n "$pid" ]; then
+#       kill -INT "$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true
+#       wait "$pid" 2>/dev/null || true
+#     fi
+#     rm -f "$TMP_ROOT/server_tcpdump.pid"
+#   fi
+# }
 
 stop_iperf_servers() {
   if [ -f "$IPERF_PIDS_FILE" ]; then
@@ -76,37 +76,37 @@ stop_iperf_servers() {
   fi
 }
 
-build_tcpdump_filter() {
-  local filter=""
-  local p
-  for p in "${IPERF_PORTS[@]}"; do
-    if [ -z "$filter" ]; then
-      filter="port $p"
-    else
-      filter="$filter or port $p"
-    fi
-  done
+# build_tcpdump_filter() {
+#   local filter=""
+#   local p
+#   for p in "${IPERF_PORTS[@]}"; do
+#     if [ -z "$filter" ]; then
+#       filter="port $p"
+#     else
+#       filter="$filter or port $p"
+#     fi
+#   done
 
-  # if [ -n "$APP_RTT_PORT" ]; then
-  #   filter="$filter or port $APP_RTT_PORT"
-  # fi
+#   if [ -n "$APP_RTT_PORT" ]; then
+#     filter="$filter or port $APP_RTT_PORT"
+#   fi
 
-  echo "$filter"
-}
+#   echo "$filter"
+# }
 
-start_early_tcpdump() {
-  local filter
-  filter="$(build_tcpdump_filter)"
+# start_early_tcpdump() {
+#   local filter
+#   filter="$(build_tcpdump_filter)"
 
-  echo "[INFO] Starting early tcpdump: $filter"
-  sudo setsid tcpdump -i "$SERVER_IFACE" -s "$TCPDUMP_SNAPLEN" \
-    -w "$TMP_ROOT/server_tcpdump_tmp.pcap" \
-    "$filter" \
-    > "$TMP_ROOT/server_tcpdump_tmp.log" 2>&1 &
-  echo $! > "$TMP_ROOT/server_tcpdump.pid"
+#   echo "[INFO] Starting early tcpdump: $filter"
+#   sudo setsid tcpdump -i "$SERVER_IFACE" -s "$TCPDUMP_SNAPLEN" \
+#     -w "$TMP_ROOT/server_tcpdump_tmp.pcap" \
+#     "$filter" \
+#     > "$TMP_ROOT/server_tcpdump_tmp.log" 2>&1 &
+#   echo $! > "$TMP_ROOT/server_tcpdump.pid"
 
-  sleep "${TCPDUMP_WARMUP_SEC:-1}"
-}
+#   sleep "${TCPDUMP_WARMUP_SEC:-1}"
+# }
 
 start_rtt_sender() {
   if [ -z "$APP_RTT_PORT" ]; then
@@ -125,12 +125,12 @@ start_rtt_sender() {
   echo $! > "$TMP_ROOT/server_rtt.pid"
 }
 
-move_early_tcpdump_to_outdir() {
-  local out_dir="$1"
+# move_early_tcpdump_to_outdir() {
+#   local out_dir="$1"
 
-  [ -f "$TMP_ROOT/server_tcpdump_tmp.pcap" ] && mv -f "$TMP_ROOT/server_tcpdump_tmp.pcap" "$out_dir/server_tcpdump.pcap"
-  [ -f "$TMP_ROOT/server_tcpdump_tmp.log" ] && mv -f "$TMP_ROOT/server_tcpdump_tmp.log" "$out_dir/tcpdump_stdout.log"
-}
+#   [ -f "$TMP_ROOT/server_tcpdump_tmp.pcap" ] && mv -f "$TMP_ROOT/server_tcpdump_tmp.pcap" "$out_dir/server_tcpdump.pcap"
+#   [ -f "$TMP_ROOT/server_tcpdump_tmp.log" ] && mv -f "$TMP_ROOT/server_tcpdump_tmp.log" "$out_dir/tcpdump_stdout.log"
+# }
 
 move_iperf_to_outdir() {
   local out_dir="$1"
@@ -141,11 +141,11 @@ move_iperf_to_outdir() {
   done
 }
 
-# move_rtt_to_outdir() {
-#   local out_dir="$1"
-#   [ -f "$TMP_ROOT/server_rtt_tmp.csv" ] && mv -f "$TMP_ROOT/server_rtt_tmp.csv" "$out_dir/server_rtt.csv"
-#   [ -f "$TMP_ROOT/server_rtt_tmp.stdout.log" ] && mv -f "$TMP_ROOT/server_rtt_tmp.stdout.log" "$out_dir/server_rtt.stdout.log"
-# }
+move_rtt_to_outdir() {
+  local out_dir="$1"
+  [ -f "$TMP_ROOT/server_rtt_tmp.csv" ] && mv -f "$TMP_ROOT/server_rtt_tmp.csv" "$out_dir/server_rtt.csv"
+  [ -f "$TMP_ROOT/server_rtt_tmp.stdout.log" ] && mv -f "$TMP_ROOT/server_rtt_tmp.stdout.log" "$out_dir/server_rtt.stdout.log"
+}
 
 wait_for_outdir() {
   local timeout_sec="${1:-10}"
@@ -315,10 +315,10 @@ plot_server_graphs() {
   # python3 "$BASE_DIR/graph/iperf_jsh.py" "$OUT_DIR" \
   #   > "$OUT_DIR/plot_iperf.stdout.log" 2>&1 || true
 
-  # if [ -f "$OUT_DIR/server_rtt.csv" ]; then
-  #   python3 "$BASE_DIR/graph/rtt.py" "$OUT_DIR/server_rtt.csv" \
-  #     > "$OUT_DIR/plot_app_rtt.stdout.log" 2>&1 || true
-  # fi
+  if [ -f "$OUT_DIR/server_rtt.csv" ]; then
+    python3 "$BASE_DIR/graph/rtt.py" "$OUT_DIR/server_rtt.csv" \
+      > "$OUT_DIR/plot_app_rtt.stdout.log" 2>&1 || true
+  fi
 }
 
 shutdown_handler() {
@@ -360,16 +360,16 @@ echo "[INFO] Starting server watcher ..."
 bash "$BASE_DIR/bin/server_watch_iperf.sh" &
 WATCHER_PID=$!
 
-# echo "[INFO] Starting multiport iperf3 one-shot server loop on ports: ${IPERF_PORTS[*]}"
-# if [ -n "$APP_RTT_PORT" ]; then
-#   echo "[INFO] App-level RTT port: $APP_RTT_PORT interval=${APP_RTT_INTERVAL_MS}ms"
-# fi
+echo "[INFO] Starting multiport iperf3 one-shot server loop on ports: ${IPERF_PORTS[*]}"
+if [ -n "$APP_RTT_PORT" ]; then
+  echo "[INFO] App-level RTT port: $APP_RTT_PORT interval=${APP_RTT_INTERVAL_MS}ms"
+fi
 
 while [ "$STOP_REQUESTED" -eq 0 ]; do
   reset_state
 
-  start_early_tcpdump
-  # start_rtt_sender
+  # start_early_tcpdump
+  start_rtt_sender
 
   : > "$IPERF_PIDS_FILE"
   for p in "${IPERF_PORTS[@]}"; do
@@ -389,7 +389,7 @@ while [ "$STOP_REQUESTED" -eq 0 ]; do
 
   OUT_DIR=""
   if OUT_DIR="$(wait_for_outdir 30)"; then
-    stop_tcpdump_only
+    # stop_tcpdump_only
 
     if [ -f "$TMP_ROOT/server_rtt.pid" ]; then
       rpid="$(cat "$TMP_ROOT/server_rtt.pid" 2>/dev/null || true)"
@@ -398,9 +398,9 @@ while [ "$STOP_REQUESTED" -eq 0 ]; do
       rm -f "$TMP_ROOT/server_rtt.pid"
     fi
 
-    move_early_tcpdump_to_outdir "$OUT_DIR"
+    # move_early_tcpdump_to_outdir "$OUT_DIR"
     move_iperf_to_outdir "$OUT_DIR"
-    # move_rtt_to_outdir "$OUT_DIR"
+    move_rtt_to_outdir "$OUT_DIR"
 
     FIRST_JSON="$(first_existing_iperf_json "$OUT_DIR" || true)"
     if [ -n "$FIRST_JSON" ]; then
